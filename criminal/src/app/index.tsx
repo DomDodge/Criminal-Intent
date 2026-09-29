@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Activity, useTheme } from '../context/ThemeContext';
@@ -36,7 +37,7 @@ function CriminalActivity({ activity }: { activity: Activity }) {
       }
     >
       <Text style={styles.medText}>
-        {activity.solved ? '✅ ' : ''}
+        {activity.solved ? <Ionicons name="lock-closed" size={24} color="#000" /> : ''}
         {activity.title}
       </Text>
       <Text>{activity.details}</Text>
