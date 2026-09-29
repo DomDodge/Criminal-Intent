@@ -1,113 +1,79 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Activity, useTheme } from '../context/ThemeContext';
 
 export default function Index() {
-  const { themeColor } = useTheme();
+  const { themeColor, activities } = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: themeColor }]}>
-      <ReportCrimeBar />
-      <View style={styles.criminalContainer}>
-        <CriminalActivity title={"John Wilkes Booth"} description={"Abe Lincoln is in big trouble! "}/>
-        <CriminalActivity title={"Nuclear War"} description={"They dun destroyed it"}/>
-        <CriminalActivity title={"Ebola Virus"} description={"Oh no! Lego city is in trouble! "}/>
-      </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.criminalContainer}
+      >
+        {activities.length === 0 ? (
+          <Text style={styles.emptyText}>
+            No crimes reported yet. Tap + to report one.
+          </Text>
+        ) : (
+          activities.map((activity) => (
+            <CriminalActivity key={activity.id} activity={activity} />
+          ))
+        )}
+      </ScrollView>
     </View>
   );
 }
 
-function ReportCrimeBar() {
+function CriminalActivity({ activity }: { activity: Activity }) {
   const router = useRouter();
 
   return (
-    <View style={styles.topBar}>
-      <Text style={styles.bigText}>Criminal Intent</Text>
-      <View style={styles.row}>
-        <Pressable 
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() => router.push('/new_activity')}
-        >
-
-          <Ionicons name="add" size={24} color="#fff" />
-        </Pressable>
-
-        <Pressable 
-          style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-          onPress={() => router.push('/settings')}
-        >
-
-          <Ionicons name="cog" size={24} color="#fff" />
-        </Pressable>
-      </View>
-    </View>
-  )
-}
-
-function CriminalActivity({title, description}: {title: string, description: string}) {
-  return (
-    <View style={styles.activity}>
-      <Text style={styles.medText}>{title}</Text>
-      <Text>{description}</Text>
-    </View>
-  )
+    <Pressable
+      style={({ pressed }) => [styles.activity, pressed && styles.pressed]}
+      onPress={() =>
+        router.push({ pathname: '/new_activity', params: { id: activity.id } })
+      }
+    >
+      <Text style={styles.medText}>
+        {activity.solved ? '✅ ' : ''}
+        {activity.title}
+      </Text>
+      <Text>{activity.details}</Text>
+      <Text style={styles.dateText}>{new Date(activity.date).toDateString()}</Text>
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "flex-start",
   },
-  activity: {
-    display: 'flex'
-  },
-  medText: {
-    fontSize: 18,
-    fontWeight: 'bold'
-  },
-  row: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'flex-end'
-  },
-  topBar: {
-    width: "100%",
-    height: 70,
-    backgroundColor: "purple",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 20,
-    paddingRight: 20,
-    justifyContent: "space-between",
-    color: "white"
+  scroll: {
+    width: '100%',
   },
   criminalContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
     gap: 10,
     padding: 10,
   },
-  bigText: {
-    color: "white",
-    fontSize: 24
+  activity: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 12,
+    gap: 4,
   },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+  medText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#8e8e93',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: '#3a3a3c',
   },
   pressed: {
     opacity: 0.7,

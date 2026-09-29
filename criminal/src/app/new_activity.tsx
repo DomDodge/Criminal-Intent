@@ -1,6 +1,7 @@
 import RNDateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Checkbox from 'expo-checkbox';
 import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Image,
@@ -14,21 +15,27 @@ import {
 import { useTheme } from '../context/ThemeContext';
 
 export default function NewActivity() {
-  const { themeColor } = useTheme();
+  const { themeColor, addActivity, updateActivity, getActivity } = useTheme();
+  const router = useRouter();
 
-  // State inputs
-  const [title, setTitle] = useState('');
-  const [details, setDetails] = useState('');
-  
+  // If an id is passed in, we're editing an existing crime
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const existing = id ? getActivity(id) : undefined;
+  const isEditing = !!existing;
+
+  // State inputs (pre-filled when editing)
+  const [title, setTitle] = useState(existing?.title ?? '');
+  const [details, setDetails] = useState(existing?.details ?? '');
+
   // Pictures state
-  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [imageUri, setImageUri] = useState<string | null>(existing?.imageUri ?? null);
 
-  // Date state defaults to today's date
-  const [date, setDate] = useState<Date>(new Date());
+  // Date state defaults to today's date (or the saved date when editing)
+  const [date, setDate] = useState<Date>(existing ? new Date(existing.date) : new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  
+
   // Solved state variable
-  const [isSolved, setIsSolved] = useState<boolean>(false);
+  const [isSolved, setIsSolved] = useState<boolean>(existing?.solved ?? false);
 
   // Image Picker Handler
   const pickImage = async () => {
@@ -54,23 +61,29 @@ export default function NewActivity() {
     }
   };
 
-  // Handle Save
+  // Handle Save: update if editing, otherwise append to the list
   const handleSave = () => {
     const activityData = {
       title,
       details,
-      imageUri, // Saved image URI variable
-      date: date.toDateString(),
+      imageUri,
+      date: date.getTime(),
       solved: isSolved,
     };
-    
-    console.log('Saved Activity:', activityData);
+
+    if (isEditing && id) {
+      updateActivity(id, activityData);
+    } else {
+      addActivity(activityData);
+    }
+
+    router.back();
   };
 
   return (
     <View style={[styles.container, { backgroundColor: themeColor || '#f5f5f7' }]}>
       <View style={styles.card}>
-        <Text style={styles.headerText}>New Activity</Text>
+        <Text style={styles.headerText}>{isEditing ? 'Edit Activity' : 'New Activity'}</Text>
 
         {/* Top Section: Pictures + Title side-by-side */}
         <View style={styles.sides}>
@@ -115,8 +128,8 @@ export default function NewActivity() {
         {/* Date Selector Button */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Date</Text>
-          <Pressable 
-            style={styles.dateButton} 
+          <Pressable
+            style={styles.dateButton}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.dateText}>📅 {date.toDateString()}</Text>
@@ -134,8 +147,8 @@ export default function NewActivity() {
         )}
 
         {/* Solved Checkbox */}
-        <Pressable 
-          style={styles.checkboxContainer} 
+        <Pressable
+          style={styles.checkboxContainer}
           onPress={() => setIsSolved(!isSolved)}
         >
           <Checkbox
@@ -149,7 +162,7 @@ export default function NewActivity() {
 
         {/* Save Button */}
         <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Activity</Text>
+          <Text style={styles.saveButtonText}>{isEditing ? 'Save Changes' : 'Save Activity'}</Text>
         </Pressable>
       </View>
     </View>
