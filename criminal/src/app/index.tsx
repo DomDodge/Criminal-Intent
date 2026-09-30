@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Activity, useTheme } from '../context/ThemeContext';
 
 export default function Index() {
@@ -11,24 +11,20 @@ export default function Index() {
 
   return (
     <View style={[styles.container, { backgroundColor: themeColor }]}>
-      <ScrollView
+      <FlatList
         style={styles.scroll}
         contentContainerStyle={styles.criminalContainer}
-      >
-        {activities.length === 0 ? (
+        data={activities}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <CriminalActivity activity={item} textColor={textColor} />
+        )}
+        ListEmptyComponent={
           <Text style={[styles.emptyText, { color: textColor }]}>
             No crimes reported yet. Tap + to report one.
           </Text>
-        ) : (
-          activities.map((activity) => (
-            <CriminalActivity 
-              key={activity.id} 
-              activity={activity} 
-              textColor={textColor} 
-            />
-          ))
-        )}
-      </ScrollView>
+        }
+      />
     </View>
   );
 }
