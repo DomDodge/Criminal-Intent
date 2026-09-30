@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  insertActivity,
+  loadActivities,
+  updateActivityRow,
+} from '../db/activites';
+import { getSetting, setSetting } from '../db/settings';
 
 export type Activity = {
   id: string;
@@ -18,6 +24,8 @@ type ThemeContextType = {
   getActivity: (id: string) => Activity | undefined;
 };
 
+const THEME_KEY = 'themeColor';
+
 const ThemeContext = createContext<ThemeContextType>({
   themeColor: '#ffffff',
   setThemeColor: () => {},
@@ -28,16 +36,50 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeColor, setThemeColor] = useState('#ffffff'); // Default: White
+  const [themeColor, setThemeColorState] = useState('#ffffff'); // Default: White
   const [activities, setActivities] = useState<Activity[]>([]);
+
+  // Load the saved theme and activities once on startup
+  useEffect(() => {
+    (async () => {
+      try {
+        const saved = await getSetting(THEME_KEY);
+        if (saved) setThemeColorState(saved);
+      } catch (e) {
+        console.warn('Failed to load theme', e);
+      }
+
+      try {
+        const saved = await loadActivities();
+        setActivities(saved);
+      } catch (e) {
+        console.warn('Failed to load activities', e);
+      }
+    })();
+  }, []);
+
+  const setThemeColor = (color: string) => {
+    setThemeColorState(color);
+    setSetting(THEME_KEY, color).catch((e) =>
+      console.warn('Failed to save theme', e)
+    );
+  };
 
   const addActivity = (data: Omit<Activity, 'id'>) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setActivities((prev) => [...prev, { id, ...data }]);
+    const activity: Activity = { id, ...data };
+    setActivities((prev) => [...prev, activity]);
+    insertActivity(activity).catch((e) =>
+      console.warn('Failed to save activity', e)
+    );
   };
 
   const updateActivity = (id: string, data: Omit<Activity, 'id'>) => {
-    setActivities((prev) => prev.map((a) => (a.id === id ? { id, ...data } : a)));
+    const activity: Activity = { id, ...data };
+    setActivities((prev) => prev.map((a) => (a.id === id ? activity : a)));
+    updateActivityRow(activity).catch((e) =>
+      console.warn('Failed to update activity', e)
+    );
   };
 
   const getActivity = (id: string) => activities.find((a) => a.id === id);
