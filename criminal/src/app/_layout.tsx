@@ -31,7 +31,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: 'purple' },
+          headerStyle: { backgroundColor: '#1D4533' },
           headerTintColor: '#fff',
           headerTitleStyle: { fontSize: 24 },
         }}

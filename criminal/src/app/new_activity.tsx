@@ -1,19 +1,18 @@
-import RNDateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import Checkbox from 'expo-checkbox';
-import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Image,
   Keyboard,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+
+import { ActivityDatePicker } from '../components/ActivityDatePicker';
+import { ActivityFormInput } from '../components/ActivityFormInput';
+import { ActivityImagePicker } from '../components/ActivityImagePicker';
 import { useTheme } from '../context/ThemeContext';
 
 export default function NewActivity() {
@@ -26,39 +25,17 @@ export default function NewActivity() {
 
   const [title, setTitle] = useState(existing?.title ?? '');
   const [details, setDetails] = useState(existing?.details ?? '');
-
-  const [imageUri, setImageUri] = useState<string | null>(existing?.imageUri ?? null);
-
-  const [date, setDate] = useState<Date>(existing ? new Date(existing.date) : new Date());
-  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-
+  const [imageUri, setImageUri] = useState<string | null>(
+    existing?.imageUri ?? null
+  );
+  const [date, setDate] = useState<Date>(
+    existing ? new Date(existing.date) : new Date()
+  );
   const [isSolved, setIsSolved] = useState<boolean>(existing?.solved ?? false);
 
-  // Image Picker Handler
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+  const titleTextColor =
+    themeColor.toLowerCase() === '#ffffff' ? '#000000' : '#ffffff';
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  // Date picker handler
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      setDate(selectedDate);
-    }
-  };
-
-  // Handle Save: update if editing, otherwise append to the list
   const handleSave = () => {
     const activityData = {
       title,
@@ -79,70 +56,54 @@ export default function NewActivity() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={[styles.container, { backgroundColor: themeColor || '#f5f5f7' }]}>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: themeColor || '#f5f5f7' },
+        ]}
+      >
         <View style={styles.card}>
-          <Text style={styles.headerText}>{isEditing ? 'Edit Activity' : 'New Activity'}</Text>
+          <Text style={[styles.headerText, { color: titleTextColor }]}>
+            {isEditing ? 'Edit Activity' : 'New Activity'}
+          </Text>
 
-          {/* Top Section: Pictures + Title side-by-side */}
+          {/* Top Section: Pictures + Title */}
           <View style={styles.sides}>
-            <Pressable style={styles.pictures} onPress={pickImage}>
-              {imageUri ? (
-                <Image source={{ uri: imageUri }} style={styles.previewImage} />
-              ) : (
-                <View style={styles.placeholderImage}>
-                  <Text style={styles.pictureIcon}>📷</Text>
-                  <Text style={styles.pictureText}>Add Photo</Text>
-                </View>
-              )}
-            </Pressable>
-
+            <ActivityImagePicker
+              imageUri={imageUri}
+              onImagePicked={setImageUri}
+              textColor={titleTextColor}
+            />
             <View style={styles.titles}>
-              <Text style={styles.label}>Title</Text>
-              <TextInput
-                style={styles.input}
+              <ActivityFormInput
+                label="Title"
+                textColor={titleTextColor}
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Activity title"
-                placeholderTextColor="#8e8e93"
               />
             </View>
           </View>
 
           {/* Details Section */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Details</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={details}
-              onChangeText={setDetails}
-              placeholder="Enter activity details"
-              placeholderTextColor="#8e8e93"
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
+          <ActivityFormInput
+            label="Details"
+            textColor={titleTextColor}
+            value={details}
+            onChangeText={setDetails}
+            placeholder="Enter activity details"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            style={styles.textArea}
+          />
 
-          {/* Date Selector Button */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Date</Text>
-            <Pressable
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateText}>📅 {date.toDateString()}</Text>
-            </Pressable>
-          </View>
-
-          {/* Native Date Picker Component */}
-          {showDatePicker && (
-            <RNDateTimePicker
-              value={date}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'inline' : 'default'}
-              onChange={handleDateChange}
-            />
-          )}
+          {/* Date Picker Component */}
+          <ActivityDatePicker
+            date={date}
+            onDateChange={setDate}
+            textColor={titleTextColor}
+          />
 
           {/* Solved Checkbox */}
           <Pressable
@@ -155,12 +116,16 @@ export default function NewActivity() {
               color={isSolved ? '#007AFF' : undefined}
               style={styles.checkbox}
             />
-            <Text style={styles.checkboxLabel}>Mark as Solved</Text>
+            <Text style={[styles.checkboxLabel, { color: titleTextColor }]}>
+              Mark as Solved
+            </Text>
           </Pressable>
 
           {/* Save Button */}
           <Pressable style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>{isEditing ? 'Save Changes' : 'Save Activity'}</Text>
+            <Text style={[styles.saveButtonText, { color: titleTextColor }]}>
+              {isEditing ? 'Save Changes' : 'Save Activity'}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -171,11 +136,10 @@ export default function NewActivity() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     padding: 20,
   },
   card: {
-    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 20,
     gap: 16,
@@ -184,78 +148,17 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1c1c1e',
   },
   sides: {
     flexDirection: 'row',
     gap: 12,
     alignItems: 'center',
   },
-  pictures: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  placeholderImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#f2f2f7',
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pictureIcon: {
-    fontSize: 20,
-  },
-  pictureText: {
-    fontSize: 10,
-    color: '#8e8e93',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-  },
   titles: {
     flex: 1,
-    gap: 6,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3a3a3c',
-  },
-  input: {
-    backgroundColor: '#f2f2f7',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: '#000',
-    borderWidth: 1,
-    borderColor: '#e5e5ea',
   },
   textArea: {
     minHeight: 80,
-  },
-  dateButton: {
-    backgroundColor: '#e5f1ff',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#007AFF',
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -271,7 +174,6 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#1c1c1e',
   },
   saveButton: {
     backgroundColor: '#007AFF',
@@ -281,7 +183,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   saveButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
   },

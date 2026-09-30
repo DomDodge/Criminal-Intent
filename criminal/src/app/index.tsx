@@ -6,6 +6,9 @@ import { Activity, useTheme } from '../context/ThemeContext';
 export default function Index() {
   const { themeColor, activities } = useTheme();
 
+  // Determine text color based on background
+  const textColor = themeColor.toLowerCase() === '#ffffff' ? '#000000' : '#ffffff';
+
   return (
     <View style={[styles.container, { backgroundColor: themeColor }]}>
       <ScrollView
@@ -13,12 +16,16 @@ export default function Index() {
         contentContainerStyle={styles.criminalContainer}
       >
         {activities.length === 0 ? (
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, { color: textColor }]}>
             No crimes reported yet. Tap + to report one.
           </Text>
         ) : (
           activities.map((activity) => (
-            <CriminalActivity key={activity.id} activity={activity} />
+            <CriminalActivity 
+              key={activity.id} 
+              activity={activity} 
+              textColor={textColor} 
+            />
           ))
         )}
       </ScrollView>
@@ -26,7 +33,13 @@ export default function Index() {
   );
 }
 
-function CriminalActivity({ activity }: { activity: Activity }) {
+function CriminalActivity({ 
+  activity, 
+  textColor 
+}: { 
+  activity: Activity; 
+  textColor: string; 
+}) {
   const router = useRouter();
 
   return (
@@ -36,12 +49,18 @@ function CriminalActivity({ activity }: { activity: Activity }) {
         router.push({ pathname: '/new_activity', params: { id: activity.id } })
       }
     >
-      <Text style={styles.medText}>
-        {activity.solved ? <Ionicons name="lock-closed" size={24} color="#000" /> : ''}
+      <Text style={[styles.medText, { color: textColor }]}>
+        {activity.solved ? (
+          <Ionicons name="lock-closed" size={24} color={textColor} />
+        ) : (
+          ''
+        )}{' '}
         {activity.title}
       </Text>
-      <Text>{activity.details}</Text>
-      <Text style={styles.dateText}>{new Date(activity.date).toDateString()}</Text>
+      <Text style={{ color: textColor }}>{activity.details}</Text>
+      <Text style={styles.dateText}>
+        {new Date(activity.date).toDateString()}
+      </Text>
     </Pressable>
   );
 }
@@ -58,8 +77,6 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   activity: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
     padding: 12,
     gap: 4,
   },
@@ -74,7 +91,6 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#3a3a3c',
   },
   pressed: {
     opacity: 0.7,

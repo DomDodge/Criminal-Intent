@@ -1,12 +1,15 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
-export default function NewActivity() {
+export default function Settings() {
   const { themeColor, setThemeColor } = useTheme();
+
+  // White text unless theme is explicitly white
+  const titleTextColor = themeColor.toLowerCase() === '#ffffff' ? '#000000' : '#ffffff';
 
   return (
     <View style={[styles.container, { backgroundColor: themeColor }]}>
-      <Text style={[styles.title, { color: themeColor === '#000000' ? '#ffffff' : '#000000' }]}>
+      <Text style={[styles.title, { color: titleTextColor }]}>
         Pick a Theme
       </Text>
 
@@ -14,12 +17,24 @@ export default function NewActivity() {
         <Text style={styles.buttonText}>White</Text>
       </Pressable>
 
-      <Pressable style={styles.button} onPress={() => setThemeColor('#000000')}>
-        <Text style={styles.buttonText}>Black</Text>
+      <Pressable style={styles.button} onPress={() => setThemeColor('#1e1d1dff')}>
+        <Text style={styles.buttonText}>Dark</Text>
       </Pressable>
 
-      <Pressable style={styles.button} onPress={() => setThemeColor('#007AFF')}>
+      <Pressable style={styles.button} onPress={() => setThemeColor('#7DCCAD')}>
+        <Text style={styles.buttonText}>Teal</Text>
+      </Pressable>
+
+      <Pressable style={styles.button} onPress={() => setThemeColor('#2C5745')}>
+        <Text style={styles.buttonText}>Green</Text>
+      </Pressable>
+
+      <Pressable style={styles.button} onPress={() => setThemeColor('#4D6787')}>
         <Text style={styles.buttonText}>Blue</Text>
+      </Pressable>
+
+      <Pressable style={styles.button} onPress={() => setThemeColor('#EB7D00')}>
+        <Text style={styles.buttonText}>Orange</Text>
       </Pressable>
     </View>
   );
