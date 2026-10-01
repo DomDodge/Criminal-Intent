@@ -1,107 +1,111 @@
-import RNDateTimePicker, {
-  DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Calendar } from 'react-native-calendars';
+import { useTheme } from '../context/ThemeContext';
 
 interface ActivityDatePickerProps {
   date: Date;
   onDateChange: (date: Date) => void;
-  textColor: string;
 }
 
-export function ActivityDatePicker({
-  date,
-  onDateChange,
-  textColor,
-}: ActivityDatePickerProps) {
-  const [showDatePicker, setShowDatePicker] = useState(false);
+// Build "YYYY-MM-DD" from local parts (toISOString would shift the day by timezone)
+const toKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
 
-  const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    // Android closes on selection automatically
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-    
-    if (selectedDate) {
-      onDateChange(selectedDate);
-    }
-  };
+export function ActivityDatePicker({ date, onDateChange }: ActivityDatePickerProps) {
+  const { theme } = useTheme();
+  const [open, setOpen] = useState(false);
 
-  const toggleDatePicker = () => {
-    setShowDatePicker((prev) => !prev);
-  };
+  const selectedKey = toKey(date);
 
   return (
     <View style={styles.inputGroup}>
-      <Text style={[styles.label, { color: textColor }]}>Date</Text>
-      
-      {/* Pressing button toggles the picker open/closed */}
-      <Pressable style={styles.dateButton} onPress={toggleDatePicker}>
-        <Text style={[styles.dateText, { color: textColor }]}>
+      <Text style={[styles.label, { color: theme.onPrimary }]}>Date</Text>
+
+      <Pressable
+        style={[styles.dateButton, { borderColor: theme.onPrimary }]}
+        onPress={() => setOpen(true)}
+      >
+        <Text style={[styles.dateText, { color: theme.onPrimary }]}>
           📅 {date.toDateString()}
         </Text>
       </Pressable>
 
-      {showDatePicker && (
-        <View style={styles.pickerContainer}>
-          <RNDateTimePicker
-            value={date}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-            onChange={handleChange}
-            // Enforces dark text inside the native picker control
-            textColor="#000000"
-            themeVariant="light"
-          />
+      <Modal
+        visible={open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(false)} // Android back button
+      >
+        <View style={styles.overlay}>
+          {/* Tapping the dimmed area closes the picker */}
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} />
 
-          {/* Dismiss button for iOS inline picker */}
-          {Platform.OS === 'ios' && (
+          <View style={[styles.card, { backgroundColor: theme.primary }]}>
+            <Calendar
+              key={theme.name} // forces a re-render when the theme changes
+              current={selectedKey}
+              onDayPress={(day) => {
+                onDateChange(new Date(day.year, day.month - 1, day.day));
+                setOpen(false);
+              }}
+              markedDates={{ [selectedKey]: { selected: true } }}
+              theme={{
+                calendarBackground: theme.primary,
+                monthTextColor: theme.onPrimary,
+                dayTextColor: theme.onPrimary,
+                todayTextColor: theme.onPrimary,
+                textSectionTitleColor: theme.onPrimary,
+                textDisabledColor: theme.onPrimary + '55',
+                arrowColor: theme.onPrimary,
+                selectedDayBackgroundColor: theme.secondary,
+                selectedDayTextColor: theme.onSecondary,
+              }}
+            />
+
             <Pressable
-              style={styles.doneButton}
-              onPress={() => setShowDatePicker(false)}
+              style={[styles.closeButton, { backgroundColor: theme.secondary }]}
+              onPress={() => setOpen(false)}
             >
-              <Text style={styles.doneText}>Done</Text>
+              <Text style={[styles.closeText, { color: theme.onSecondary }]}>Close</Text>
             </Pressable>
-          )}
+          </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  inputGroup: {
-    gap: 6,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  inputGroup: { gap: 6 },
+  label: { fontSize: 14, fontWeight: '600' },
   dateButton: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 10,
     alignItems: 'center',
+    borderWidth: 1,
   },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '600',
+  dateText: { fontSize: 15, fontWeight: '600' },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  pickerContainer: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 8,
-    marginTop: 6,
+  card: {
+    width: '90%',
+    maxWidth: 380,
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
   },
-  doneButton: {
-    alignSelf: 'flex-end',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  closeButton: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
   },
-  doneText: {
-    color: '#007AFF',
-    fontWeight: '600',
-    fontSize: 16,
-  },
+  closeText: { fontSize: 16, fontWeight: '600' },
 });

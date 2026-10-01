@@ -47,12 +47,8 @@ export default function ActivityForm({ form, textColor }: Props) {
         style={styles.textArea}
       />
 
-      <ActivityDatePicker
-        date={form.date}
-        onDateChange={form.setDate}
-        textColor={textColor}
-      />
-
+      <ActivityDatePicker date={form.date} onDateChange={form.setDate} />
+      
       <SolvedCheckbox
         value={form.isSolved}
         onChange={form.setIsSolved}
