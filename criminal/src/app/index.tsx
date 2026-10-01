@@ -1,31 +1,29 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
+import ThemedScreen from '../components/ThemedScreen';
 import { Activity, useTheme } from '../context/ThemeContext';
 
 export default function Index() {
-  const { themeColor, activities } = useTheme();
-
-  // Determine text color based on background
-  const textColor = themeColor.toLowerCase() === '#ffffff' ? '#000000' : '#ffffff';
+  const { theme, activities } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColor }]}>
+    <ThemedScreen>
       <FlatList
         style={styles.scroll}
         contentContainerStyle={styles.criminalContainer}
         data={activities}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <CriminalActivity activity={item} textColor={textColor} />
+          <CriminalActivity activity={item} textColor={theme.onPrimary} />
         )}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: textColor }]}>
+          <Text style={[styles.emptyText, { color: theme.onPrimary }]}>
             No crimes reported yet. Tap + to report one.
           </Text>
         }
       />
-    </View>
+    </ThemedScreen>
   );
 }
 

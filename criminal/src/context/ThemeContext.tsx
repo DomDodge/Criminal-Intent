@@ -1,4 +1,6 @@
+import { randomUUID } from 'expo-crypto';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AppTheme, getThemeByColor } from '../constants/themes';
 import {
   insertActivity,
   loadActivities,
@@ -17,9 +19,10 @@ export type Activity = {
 
 type ThemeContextType = {
   themeColor: string;
+  theme: AppTheme; 
   setThemeColor: (color: string) => void;
   activities: Activity[];
-  addActivity: (data: Omit<Activity, 'id'>) => void;
+  addActivity: (data: Omit<Activity, 'id'>) => string;
   updateActivity: (id: string, data: Omit<Activity, 'id'>) => void;
   getActivity: (id: string) => Activity | undefined;
 };
@@ -28,9 +31,10 @@ const THEME_KEY = 'themeColor';
 
 const ThemeContext = createContext<ThemeContextType>({
   themeColor: '#ffffff',
+  theme: getThemeByColor('#ffffff'),
   setThemeColor: () => {},
   activities: [],
-  addActivity: () => {},
+  addActivity: () => '',
   updateActivity: () => {},
   getActivity: () => undefined,
 });
@@ -66,12 +70,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addActivity = (data: Omit<Activity, 'id'>) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const id = randomUUID();
     const activity: Activity = { id, ...data };
     setActivities((prev) => [...prev, activity]);
     insertActivity(activity).catch((e) =>
       console.warn('Failed to save activity', e)
     );
+    return id;
   };
 
   const updateActivity = (id: string, data: Omit<Activity, 'id'>) => {
@@ -83,11 +88,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getActivity = (id: string) => activities.find((a) => a.id === id);
+  const theme = getThemeByColor(themeColor);
 
   return (
     <ThemeContext.Provider
       value={{
         themeColor,
+        theme,
         setThemeColor,
         activities,
         addActivity,
